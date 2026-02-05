@@ -1,0 +1,177 @@
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { cars } from "@/constants/constants";
+import Image from "next/image";
+
+type Plan = "day" | "week" | "month";
+
+export default function CarPage() {
+  const params = useParams();
+  const id = params?.id;
+  const carId = Number(id);
+
+  const router = useRouter();
+
+  const [car, setCar] = useState<typeof cars[0] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [plan, setPlan] = useState<Plan>("day");
+
+  useEffect(() => {
+    if (!id) return;
+    const foundCar = cars.find((c) => c.id === carId);
+    setCar(foundCar || null);
+    setLoading(false);
+  }, [id, carId]);
+
+  if (loading)
+    return (
+      <p className="text-center mt-20 text-gray-500 text-lg">
+        Loading car details...
+      </p>
+    );
+  if (!car)
+    return (
+      <p className="text-center mt-20 text-gray-500 text-lg">Car not found</p>
+    );
+
+  const price =
+    plan === "day"
+      ? car.pricePerDay
+      : plan === "week"
+      ? Math.round(car.pricePerDay * 7 * 0.9)
+      : Math.round(car.pricePerDay * 30 * 0.75);
+
+  return (
+    <section className="mx-auto min-h-screen bg-gradient-to-r from-white to-blue-400 px-6 sm:px-12">
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <button
+          onClick={() => {
+            if (window.history.length > 1) router.back();
+            else router.push("/cars");
+          }}
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 font-medium"
+        >
+          ← Back
+        </button>
+
+        <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-gray-900">
+          Rent the{" "}
+          <span className="text-primary-600">
+            {car.manufacturer} {car.model}
+          </span>
+        </h1>
+        <p className="mt-4 max-w-2xl text-gray-600 text-base sm:text-lg">
+          Choose a flexible rental plan that suits your journey. Simple
+          pricing, premium cars, no hidden costs.
+        </p>
+
+        <div className="mt-10 bg-white rounded-2xl shadow-xl p-6 md:p-8">
+          <div className="flex flex-col md:flex-row gap-10">
+            <div className="md:w-1/2">
+              <div className="relative w-full h-72 sm:h-80 md:h-96 rounded-xl bg-gray-100 flex items-center justify-center">
+                <Image
+                  src={car.image}
+                  alt={car.model}
+                  width={520}
+                  height={320}
+                  className="object-contain"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <Spec label="Year" value={car.year} />
+                <Spec label="Fuel" value={car.fuel} />
+                <Spec label="Engine" value={car.engine} />
+                <Spec label="Transmission" value={car.transmission} />
+                <Spec label="Drive" value={car.drive} />
+                <Spec
+                  label="Efficiency"
+                  value={
+                    car.kmPerLitre > 0 ? `${car.kmPerLitre} km/L` : "Electric"
+                  }
+                />
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-extrabold text-gray-900 mb-4">
+                  Choose your plan
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <PlanCard
+                    active={plan === "day"}
+                    title="Daily"
+                    subtitle="Best for short trips"
+                    price={`$${car.pricePerDay}/day`}
+                    onClick={() => setPlan("day")}
+                  />
+                  <PlanCard
+                    active={plan === "week"}
+                    title="Weekly"
+                    subtitle="Save 10%"
+                    price={`$${Math.round(car.pricePerDay * 7 * 0.9)}`}
+                    onClick={() => setPlan("week")}
+                  />
+                  <PlanCard
+                    active={plan === "month"}
+                    title="Monthly"
+                    subtitle="Save 25%"
+                    price={`$${Math.round(car.pricePerDay * 30 * 0.75)}`}
+                    onClick={() => setPlan("month")}
+                  />
+                </div>
+
+                <div className="mt-6 flex items-center justify-between rounded-xl bg-blue-50 p-5">
+                  <div>
+                    <p className="text-sm text-gray-600">Total price</p>
+                    <p className="text-3xl font-extrabold text-blue-600">
+                      ${price}
+                    </p>
+                  </div>
+                  <button className="rounded-full bg-blue-600 px-8 py-3 font-semibold text-white transition hover:bg-blue-700">
+                    Book Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const Spec = ({ label, value }: { label: string; value: any }) => (
+  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+    <p className="text-sm text-gray-500">{label}</p>
+    <p className="text-lg font-semibold text-gray-900">{value}</p>
+  </div>
+);
+
+const PlanCard = ({
+  title,
+  subtitle,
+  price,
+  active,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  price: string;
+  active: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`rounded-xl border p-4 text-left transition ${
+      active ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-blue-400"
+    }`}
+  >
+    <p className="text-lg font-bold text-gray-900">{title}</p>
+    <p className="text-sm text-gray-500">{subtitle}</p>
+    <p className="mt-2 text-xl font-extrabold text-blue-600">{price}</p>
+  </button>
+);
