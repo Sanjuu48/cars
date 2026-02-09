@@ -21,7 +21,7 @@ const Navbar = () => {
           href="/signin"
           className="min-w-22.5 rounded-full bg-gray-200 px-6 py-2 font-medium text-gray-900 transition hover:bg-blue-900 hover:text-white"
         >
-          Sign In
+          Login In
         </Link>
       </nav>
     </header>
