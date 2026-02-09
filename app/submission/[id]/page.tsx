@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useSearchParams, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cars } from "@/constants/constants";
