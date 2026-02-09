@@ -2,8 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignUpPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirectTo") || "/";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,20 +22,30 @@ export default function SignUpPage() {
       return;
     }
 
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      setMessage("Account created successfully! You can now sign in.");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-    } else {
-      setMessage(data.error);
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage("Successfully signed up! Redirecting...");
+
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+
+        setTimeout(() => {
+          router.push(redirectTo);
+        }, 1500);
+      } else {
+        setMessage(data.error || "Failed to sign up. Please try again.");
+      }
+    } catch (error) {
+      setMessage("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -69,7 +84,7 @@ export default function SignUpPage() {
             type="submit"
             className="w-full rounded bg-blue-600 py-2 text-white font-semibold hover:bg-blue-700 transition"
           >
-            Login In
+            Sign Up
           </button>
         </form>
 
@@ -78,7 +93,7 @@ export default function SignUpPage() {
         <p className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{" "}
           <Link href="/signin" className="text-blue-600 hover:underline">
-            Sign In
+            Log In
           </Link>
         </p>
       </div>

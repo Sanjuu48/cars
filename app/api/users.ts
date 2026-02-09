@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "../lib/db";
 import User from "../models/User";
+import { NextRequest, NextResponse } from "next/server";
 
 type UserType = {
   _id: string;
@@ -13,8 +14,7 @@ type UserType = {
 type ErrorResponse = { error: string };
 
 export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<UserType[] | ErrorResponse>
+  req: NextRequest
 ) {
   try {
     await dbConnect();
@@ -28,9 +28,9 @@ export default async function handler(
       updatedAt: user.updatedAt.toISOString(),
     }));
 
-    res.status(200).json(formattedUsers);
+    return formattedUsers;
   } catch (error) {
     console.error("Failed to fetch users:", error);
-    res.status(500).json({ error: "Failed to fetch users" });
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }

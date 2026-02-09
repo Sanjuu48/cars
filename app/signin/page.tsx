@@ -48,7 +48,7 @@ export default function SignInPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-white to-blue-700 px-6">
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
         <h2 className="mb-6 text-2xl font-bold text-gray-900 text-center">
-          Sign In
+          Log In
         </h2>
 
         <form onSubmit={handleSignIn} className="flex flex-col gap-4">
@@ -74,7 +74,7 @@ export default function SignInPage() {
             type="submit"
             className="w-full rounded bg-blue-600 py-2 text-white font-semibold hover:bg-blue-700 transition"
           >
-            Sign In
+            Log In
           </button>
         </form>
 

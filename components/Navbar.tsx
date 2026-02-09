@@ -11,7 +11,7 @@ const Navbar = () => {
             alt="Car Rental Logo"
             width={50}
             height={50}
-            className="object-contain border-amber-800 border-2"
+            className="object-contain"
             priority
           />
           <span className="hidden sm:inline">Car Rental</span>
@@ -21,7 +21,7 @@ const Navbar = () => {
           href="/signin"
           className="min-w-22.5 rounded-full bg-gray-200 px-6 py-2 font-medium text-gray-900 transition hover:bg-blue-900 hover:text-white"
         >
-          Login In
+          Log In
         </Link>
       </nav>
     </header>

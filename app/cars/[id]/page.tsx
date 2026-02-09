@@ -131,7 +131,8 @@ export default function CarPage() {
                       ${price}
                     </p>
                   </div>
-                  <button className="rounded-full bg-blue-600 px-8 py-3 font-semibold text-white transition hover:bg-blue-700">
+                  <button onClick={()=> router.push(`/submission/${car.id}?plan=${plan}`)}
+                  className="rounded-full bg-blue-600 px-8 py-3 font-semibold text-white transition hover:bg-blue-700">
                     Book Now
                   </button>
                 </div>
