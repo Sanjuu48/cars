@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import Car from "@/app/models/Car";
-import fs from "fs";
-import connectDB from "@/app/lib/db"
-import path from "path";
+import connectDB from "@/app/lib/db";
+import cloudinary from "@/app/lib/cloudinary";
 
 export async function GET() {
   await connectDB();
@@ -19,6 +18,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  await connectDB(); 
 
   try {
     const formData = await req.formData();
@@ -34,16 +34,14 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadDir = path.join(process.cwd(), "public/uploads");
-
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    const fileName = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadDir, fileName);
-
-    fs.writeFileSync(filePath, buffer);
+    const uploadResult: any = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream({ folder: "cars" }, (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        })
+        .end(buffer);
+    });
 
     const car = await Car.create({
       manufacturer: formData.get("manufacturer"),
@@ -55,7 +53,7 @@ export async function POST(req: Request) {
       transmission: formData.get("transmission"),
       drive: formData.get("drive"),
       kmPerLitre: Number(formData.get("kmPerLitre")),
-      image: `/uploads/${fileName}`,
+      image: uploadResult.secure_url,
     });
 
     return NextResponse.json(car, { status: 201 });
