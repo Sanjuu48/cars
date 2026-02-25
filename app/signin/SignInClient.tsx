@@ -1,20 +1,21 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/";
 
+  const { refreshUser } = useAuth(); 
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState(false); 
+  const [success, setSuccess] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,9 +33,9 @@ export default function SignInPage() {
         setMessage("Successfully logged in!");
         setSuccess(true);
 
-        setTimeout(() => {
-          router.push(redirectTo);
-        }, 2000);
+        await refreshUser();
+
+        router.push(redirectTo);
       } else {
         setMessage(data.error || data.message || "Signin failed");
         setSuccess(false);
@@ -47,11 +48,9 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-white to-blue-700 px-6">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-r from-white to-blue-700 px-6">
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
-        <h2 className="mb-6 text-2xl font-bold text-gray-900 text-center">
-          Log In
-        </h2>
+        <h2 className="mb-6 text-2xl font-bold text-gray-900 text-center">Log In</h2>
 
         <form onSubmit={handleSignIn} className="flex flex-col gap-4">
           <input

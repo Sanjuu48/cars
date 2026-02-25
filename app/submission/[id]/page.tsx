@@ -1,51 +1,62 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useSearchParams, useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { cars } from "@/constants/constants";
+import Image from "next/image";
+
+interface Car {
+  _id: string;
+  manufacturer: string;
+  model: string;
+  year: number;
+  fuel: string;
+  engine: string;
+  image: string;
+  pricePerDay: number;
+  transmission: string;
+  drive: string;
+  kmPerLitre: number;
+}
+
+type Plan = "day" | "week" | "month";
 
 export default function SubmissionPage() {
   const params = useParams();
-  const id = params?.id;
   const searchParams = useSearchParams();
-  const plan = searchParams.get("plan") as "day" | "week" | "month";
+  const id = params?.id;
+  const plan = (searchParams.get("plan") || "day") as Plan;
 
-  const carId = Number(id);
-  const [car, setCar] = useState<typeof cars[0] | null>(null);
-
+  const [car, setCar] = useState<Car | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
   });
-
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    const foundCar = cars.find((c) => c.id === carId);
-    setCar(foundCar || null);
-  }, [carId]);
+    if (!id) return;
 
-  if (!car) return <p className="text-center mt-20 text-gray-500">Car not found</p>;
+    const fetchCar = async () => {
+      try {
+        const res = await fetch(`/api/cars/${id}`);
+        const data = await res.json();
+        if (!res.ok) setCar(null);
+        else setCar(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setCar(null);
+      }
+    };
+    fetchCar();
+  }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  const res = await fetch("/api/sendBookingEmail", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ car, plan, ...formData }),
-  });
-
-  if (res.ok) setSubmitted(true);
-  else alert("Something went wrong. Please try again.");
-};
+  if (!car)
+    return (
+      <p className="text-center mt-20 text-gray-500 text-lg">
+        Car not found
+      </p>
+    );
 
   const price =
     plan === "day"
@@ -54,73 +65,105 @@ const handleSubmit = async (e: React.FormEvent) => {
       ? Math.round(car.pricePerDay * 7 * 0.9)
       : Math.round(car.pricePerDay * 30 * 0.75);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await fetch("/api/sendBookingEmail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ car, plan, ...formData }),
+    });
+    if (res.ok) setSubmitted(true);
+    else alert("Something went wrong. Please try again.");
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-white to-blue-400 p-6 sm:p-12">
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-4">
-          Booking for {car.manufacturer} {car.model}
+    <section className="min-h-screen bg-linear-to-br from-blue-100 via-white to-blue-300 px-6 sm:px-12 py-12 flex items-center justify-center">
+      <div className="max-w-3xl w-full backdrop-blur-md bg-white/30 border border-white/40 rounded-3xl shadow-2xl p-8 md:p-12 transition-transform hover:scale-[1.02]">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">
+          Booking: {car.manufacturer} {car.model}
         </h1>
-        <p className="mb-6 text-gray-600">
-          You selected the <strong>{plan}</strong> plan. Total price: <strong>${price}</strong>.
+
+        <div className="relative w-full h-64 sm:h-80 rounded-2xl overflow-hidden mb-6 shadow-lg">
+          <Image
+            src={car.image}
+            alt={car.model}
+            fill
+            className="object-contain transition-transform duration-300 hover:scale-105"
+          />
+        </div>
+
+        <p className="text-center text-gray-700 mb-8 text-lg">
+          You selected the <strong>{plan}</strong> plan. Total price:{" "}
+          <strong className="text-blue-600">${price}</strong>.
         </p>
 
-        <h2 className="text-xl font-bold mb-2">Instructions:</h2>
-        <ul className="mb-6 list-disc list-inside text-gray-600">
-          <li>Fill in your contact details below.</li>
-          <li>We will send a confirmation email within 24 hours.</li>
-          <li>Please have a valid driver’s license ready at pickup.</li>
-          <li>Payment will be collected upon confirmation.</li>
-        </ul>
-
         {submitted ? (
-          <p className="text-green-600 font-bold text-lg">
+          <p className="text-green-600 font-bold text-lg text-center">
             Booking submitted! We will contact you shortly.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 bg-white/40 backdrop-blur-md p-6 rounded-2xl border border-white/30 shadow-lg"
+          >
             <div>
-              <label className="block text-gray-700 font-medium">Full Name</label>
+              <label className="block text-gray-700 font-medium mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full p-2 border rounded-md"
+                className="w-full p-3 rounded-xl border border-gray-300 bg-white/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                placeholder="John Doe"
               />
             </div>
+
             <div>
-              <label className="block text-gray-700 font-medium">Email</label>
+              <label className="block text-gray-700 font-medium mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full p-2 border rounded-md"
+                className="w-full p-3 rounded-xl border border-gray-300 bg-white/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                placeholder="john@example.com"
               />
             </div>
+
             <div>
-              <label className="block text-gray-700 font-medium">Phone</label>
+              <label className="block text-gray-700 font-medium mb-1">
+                Phone
+              </label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full p-2 border rounded-md"
+                className="w-full p-3 rounded-xl border border-gray-300 bg-white/50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                placeholder="+1234567890"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-full font-semibold hover:bg-blue-700 transition"
+              className="w-full py-3 rounded-2xl bg-linear-to-r from-blue-500 to-indigo-600 text-white font-bold shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300"
             >
               Submit Booking
             </button>
           </form>
         )}
       </div>
-    </div>
+    </section>
   );
 }

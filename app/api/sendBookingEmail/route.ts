@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("📩 sendBookingEmail API HIT");
+    console.log(" sendBookingEmail API HIT");
     const contentType = req.headers.get("content-type");
     if (!contentType?.includes("application/json")) {
       return NextResponse.json(
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log("📦 BODY:", body);
+    console.log(" BODY:", body);
 
     const { car, plan, name, email, phone } = body;
     if (!car || !plan || !name || !email || !phone) {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("🔥 sendBookingEmail ERROR:", error);
+    console.error(" sendBookingEmail ERROR:", error);
     console.error("STACK:", error?.stack);
 
     return NextResponse.json(
